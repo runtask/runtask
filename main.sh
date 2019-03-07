@@ -54,6 +54,16 @@ esac
 
 
 #
+# Checkout RUNTASK_USE_COMMIT
+#
+if [ -z "$RUNTASK_USE_COMMIT" ]; then
+    RUNTASK_USE_COMMIT="$TRAVIS_COMMIT"
+else
+    git checkout -qf "$RUNTASK_USE_COMMIT"
+fi
+
+
+#
 # Get all stages
 #
 STAGES=( $(find -maxdepth 1 -type d -name "${TRAVIS_BRANCH}-*" -exec basename {} ';' | sort) )
@@ -114,6 +124,7 @@ if [ "$RUNTASK_NEXT_STAGE" != "stop" ]; then
         \"config\": {
           \"merge_mode\": \"deep_merge\",
           \"env\": {
+            \"RUNTASK_USE_COMMIT\": \"$RUNTASK_USE_COMMIT\",
             \"RUNTASK_CURRENT_STAGE\": \"$RUNTASK_NEXT_STAGE\"
           }
         }
