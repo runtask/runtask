@@ -30,6 +30,7 @@ master):
         git push -f origin "$branch"
     done
     popd
+    exit 0
     ;;
 
 daily|weekly|monthly):
@@ -47,5 +48,11 @@ daily|weekly|monthly):
     exit 1
     ;;
 esac
+
+
+export RUNTASK_CONTEXT=""
+dotnet --version
+time dotnet run --configuration Release -- "@$TRAVIS_BRANCH"
+
 
 exit 0
