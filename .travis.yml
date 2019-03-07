@@ -1,0 +1,14 @@
+dist: xenial
+sudo: required
+services:
+  - docker
+
+script:
+  - ./run.sh
+
+branches:
+  only:
+    - master
+    - daily
+    - weekly
+    - monthly
