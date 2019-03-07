@@ -4,10 +4,11 @@ set -v
 
 set -e
 
-echo "TRAVIS_EVENT_TYPE: $TRAVIS_EVENT_TYPE"
-echo "TRAVIS_BRANCH: $TRAVIS_BRANCH"
-echo "TRAVIS_COMMIT: $TRAVIS_COMMIT"
-echo "TRAVIS_BUILD_DIR: $TRAVIS_BUILD_DIR"
+echo -e "\n\n"
+echo "INFO: TRAVIS_EVENT_TYPE: $TRAVIS_EVENT_TYPE"
+echo "INFO: TRAVIS_BRANCH: $TRAVIS_BRANCH"
+echo "INFO: TRAVIS_COMMIT: $TRAVIS_COMMIT"
+echo "INFO: TRAVIS_BUILD_DIR: $TRAVIS_BUILD_DIR"
 
 
 if [ ! -d "$TRAVIS_BUILD_DIR" ]; then
@@ -40,7 +41,7 @@ daily|weekly|monthly):
         echo -e "\n================================================================\n\n\n"
     else
         echo "INFO: Ignore build for $TRAVIS_BRANCH (reason: $TRAVIS_EVENT_TYPE)"
-        #exit 0
+        exit 0
     fi
     ;;
 
@@ -51,41 +52,84 @@ daily|weekly|monthly):
 esac
 
 
-#
-# Install dotnet core 2.1
-#
-OS_ID="$(lsb_release -s -i)"
-OS_VER="$(lsb_release -s -r)"
 
-if [ "$OS_ID" = "Ubuntu" ]; then
-    if [ "$OS_VER" = "14.04" ]; then
-        wget -q https://packages.microsoft.com/config/ubuntu/14.04/packages-microsoft-prod.deb
-        sudo dpkg -i packages-microsoft-prod.deb
-    elif [ "$OS_VER" = "16.04" ]; then
-        wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
-        sudo dpkg -i packages-microsoft-prod.deb
-    elif [ "$OS_VER" = "18.04" ]; then
-        wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
-        sudo dpkg -i packages-microsoft-prod.deb
-        sudo add-apt-repository universe
-    else
-        echo "ERROR: Unknown Ubuntu version: $OS_VER"
-        exit 1
-    fi
-    sudo apt-get update -yqq
-    sudo apt-get install -yqq dotnet-sdk-2.1
-else
-    echo "ERROR: Unknown OS: $OS_ID"
-    exit 1
+#
+# Get all stages
+#
+STAGES=( $(find -maxdepth 1 -type d -name "${TRAVIS_BRANCH}-*" -exec basename {} ';' | sort) )
+STAGES_COUNT="${#STAGES[@]}"
+
+echo "INFO: Stages count: $STAGES_COUNT"
+for stage in "${STAGES[@]}"; do
+    echo "INFO:     $stage"
+done
+
+if [ "$STAGES_COUNT" -eq 0 ]; then
+    echo "INFO: No stages found..."
+    exit 0
 fi
 
 
+if [ -z "$RUNTASK_CURRENT_STAGE" ]; then
+    RUNTASK_CURRENT_STAGE="${STAGES[0]}"
+fi
+echo "INFO: RUNTASK_CURRENT_STAGE: $RUNTASK_CURRENT_STAGE"
+
+
+
 #
-# Run "runtask"
+# Run RUNTASK_CURRENT_STAGE
 #
-export RUNTASK_CONTEXT=""
-dotnet --version
-time dotnet run --configuration Release -- "@$TRAVIS_BRANCH"
+echo "INFO: Run stage: $RUNTASK_CURRENT_STAGE"
+# TODO
+
+
+
+#
+# Get next stage for run
+#
+if [ "$RUNTASK_NEXT_STAGE" != "stop" ]; then
+    RUNTASK_NEXT_STAGE="stop"
+    last_stage=""
+    for stage in "${STAGES[@]}"; do
+        if [ "$last_stage" = "$RUNTASK_CURRENT_STAGE" ]; then
+            RUNTASK_NEXT_STAGE="$stage"
+            break
+        fi
+        last_stage="$stage"
+    done
+    unset last_stage
+fi
+echo "INFO: RUNTASK_NEXT_STAGE: $RUNTASK_NEXT_STAGE"
+
+
+
+#
+# Run next stage if it is not "stop"
+#
+if [ "$RUNTASK_NEXT_STAGE" != "stop" ]; then
+    body="{
+      \"request\": {
+        \"branch\": \"$TRAVIS_BRANCH\",
+        \"config\": {
+          \"merge_mode\": \"deep_merge\",
+          \"env\": {
+            \"RUNTASK_CURRENT_STAGE\": \"$RUNTASK_NEXT_STAGE\"
+          }
+        }
+      }
+    }"
+
+    curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/json" \
+        -H "Travis-API-Version: 3" \
+        -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
+        -d "$body" \
+        https://api.travis-ci.com/repo/runtask%2Fruntask/requests
+    unset body
+fi
+
 
 
 exit 0
