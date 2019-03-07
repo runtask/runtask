@@ -51,6 +51,38 @@ daily|weekly|monthly):
 esac
 
 
+#
+# Install dotnet core 2.1
+#
+OS_ID="$(lsb_release -s -i)"
+OS_VER="$(lsb_release -s -r)"
+
+if [ "$OS_ID" = "Ubuntu" ]; then
+    if [ "$OS_VER" = "14.04" ]; then
+        wget -q https://packages.microsoft.com/config/ubuntu/14.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+    elif [ "$OS_VER" = "16.04" ]; then
+        wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+    elif [ "$OS_VER" = "18.04" ]; then
+        wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo add-apt-repository universe
+    else
+        echo "ERROR: Unknown Ubuntu version: $OS_VER"
+        exit 1
+    fi
+    sudo apt-get update -yqq
+    sudo apt-get install -yqq dotnet-sdk-2.1
+else
+    echo "ERROR: Unknown OS: $OS_ID"
+    exit 1
+fi
+
+
+#
+# Run "runtask"
+#
 export RUNTASK_CONTEXT=""
 dotnet --version
 time dotnet run --configuration Release -- "@$TRAVIS_BRANCH"

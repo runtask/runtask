@@ -3,8 +3,6 @@ sudo: required
 services:
   - docker
 
-dotnet: 2.1
-
 script:
   - ./main.sh
 
