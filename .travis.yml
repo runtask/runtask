@@ -3,7 +3,6 @@ sudo: required
 services:
   - docker
 
-language: csharp
 dotnet: 2.1
 
 script:

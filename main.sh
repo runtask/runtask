@@ -40,6 +40,7 @@ daily|weekly|monthly):
         echo -e "\n================================================================\n\n\n"
     else
         echo "INFO: Ignore build for $TRAVIS_BRANCH (reason: $TRAVIS_EVENT_TYPE)"
+        #exit 0
     fi
     ;;
 
