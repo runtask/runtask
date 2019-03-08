@@ -127,8 +127,31 @@ echo "INFO: RUNTASK_NEXT_STAGE: $RUNTASK_NEXT_STAGE"
 # Run RUNTASK_CURRENT_STAGE
 #
 echo "INFO: Run stage: $RUNTASK_CURRENT_STAGE"
-echo -e "\n================================================================\n\n\n"
-# TODO
+echo -e "\n============================= BEGIN ============================\n\n"
+
+pushd "$RUNTASK_CURRENT_STAGE" >/dev/null
+shopt -s nullglob
+for file in *; do
+    if [ ! -x "$file" ]; then
+        echo "INFO: Skip file which is not executable: $file"
+        continue
+    fi
+    echo -e "\n-------- Run $file --------\n"
+    set +e
+    time "./$file"
+    ret="$?"
+    set -e
+    echo -e "\n-------- Run $file (done) --------\n"
+    if [ "$ret" -ne 0 ]; then
+        echo "ERROR: $file failed with $ret"
+        exit 3
+    fi
+done
+shopt -u nullglob
+popd >/dev/null
+
+echo -e "\nINFO: Run stage successfully: $RUNTASK_CURRENT_STAGE"
+echo -e "============================== END =============================\n\n"
 
 
 
