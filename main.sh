@@ -72,7 +72,12 @@ fi
 #
 # Get all stages
 #
-STAGES=( $(find -maxdepth 1 -type d -name "${TRAVIS_BRANCH}-*" -exec basename {} ';' | sort) )
+shopt -s nullglob
+STAGES=( )
+for name in "${TRAVIS_BRANCH}-"*; do
+    STAGES+=( "$name" )
+done
+shopt -u nullglob
 STAGES_COUNT="${#STAGES[@]}"
 
 echo "INFO: Stages count: $STAGES_COUNT"
@@ -80,16 +85,23 @@ for stage in "${STAGES[@]}"; do
     echo "INFO:     $stage"
 done
 
-if [ "$STAGES_COUNT" -eq 0 ]; then
-    echo "INFO: No stages found..."
-    exit 0
-fi
 
 
+#
+# Get current stage for run
+#
 if [ -z "$RUNTASK_CURRENT_STAGE" ]; then
+    if [ "$STAGES_COUNT" -eq 0 ]; then
+        echo "INFO: No stages found..."
+        exit 0
+    fi
     RUNTASK_CURRENT_STAGE="${STAGES[0]}"
 fi
 echo "INFO: RUNTASK_CURRENT_STAGE: $RUNTASK_CURRENT_STAGE"
+if [ ! -d "$RUNTASK_CURRENT_STAGE" ]; then
+    echo "ERROR: Current stage directory not exists: $RUNTASK_CURRENT_STAGE"
+    exit 2
+fi
 
 
 #
