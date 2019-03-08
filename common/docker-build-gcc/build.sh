@@ -27,6 +27,7 @@ fi
 if [ ! -d "./go" ]; then
     echo "ERROR: go directory not found (should have been downloaded just now?!)"
     run ls -AhlF
+    exit 2
 fi
 
 
@@ -38,6 +39,6 @@ run sudo -E docker build \
     .
 
 if option_true "$DOCKER_PUSH"; then
-    run sudo -E docker push catchyrime/gcc:"$GCC_VERSION"
+    retry_5_times sudo -E docker push catchyrime/gcc:"$GCC_VERSION"
 fi
 

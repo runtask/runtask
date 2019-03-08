@@ -25,3 +25,11 @@ option_true() {
     esac
 }
 
+retry_5_times() {
+    run "$@" ||
+        (echo "Sleep 5 seconds and retry..."; sleep 5; run "$@") ||
+        (echo "Sleep 20 seconds and retry..."; sleep 20; run "$@") ||
+        (echo "Sleep 60 seconds and retry..."; sleep 60; run "$@") ||
+        (echo "Sleep 120 seconds and retry..."; sleep 120; run "$@")
+}
+
