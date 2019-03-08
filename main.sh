@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -v
+#set -v
 
 set -e
 
@@ -20,6 +20,11 @@ fi
 case "$TRAVIS_BRANCH" in
 master):
     # Currently we are on master branch
+    if [ "$TRAVIS_EVENT_TYPE" == "local" ]; then
+        echo "ERROR: Run local on master branch makes no sense!"
+        exit 2
+    fi
+
     # Force sync master branch to other branches: daily, weekly, monthly
     TMPREPO="/tmp/$(cat /dev/random | tr -dc 'a-zA-Z0-9' | head -c 16)"
     git clone "https://runtask:$GITHUB_PAT@github.com/runtask/runtask" "$TMPREPO"
@@ -36,9 +41,8 @@ master):
 
 daily|weekly|monthly):
     # Only do "api" build and "cron" build
-    if [ "$TRAVIS_EVENT_TYPE" = "api" ] || [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then
+    if [ "$TRAVIS_EVENT_TYPE" = "api" ] || [ "$TRAVIS_EVENT_TYPE" = "cron" ] || [ "$TRAVIS_EVENT_TYPE" = "local" ]; then
         echo "INFO: Run build for $TRAVIS_BRANCH (reason: $TRAVIS_EVENT_TYPE)"
-        echo -e "\n================================================================\n\n\n"
     else
         echo "INFO: Ignore build for $TRAVIS_BRANCH (reason: $TRAVIS_EVENT_TYPE)"
         exit 0
@@ -54,12 +58,14 @@ esac
 
 
 #
-# Checkout RUNTASK_USE_COMMIT
+# Checkout RUNTASK_USE_COMMIT (if not local)
 #
-if [ -z "$RUNTASK_USE_COMMIT" ]; then
-    RUNTASK_USE_COMMIT="$TRAVIS_COMMIT"
-else
-    git checkout -qf "$RUNTASK_USE_COMMIT"
+if [ "$TRAVIS_EVENT_TYPE" != "local" ]; then
+    if [ -z "$RUNTASK_USE_COMMIT" ]; then
+        RUNTASK_USE_COMMIT="$TRAVIS_COMMIT"
+    else
+        git checkout -qf "$RUNTASK_USE_COMMIT"
+    fi
 fi
 
 
@@ -86,15 +92,6 @@ fi
 echo "INFO: RUNTASK_CURRENT_STAGE: $RUNTASK_CURRENT_STAGE"
 
 
-
-#
-# Run RUNTASK_CURRENT_STAGE
-#
-echo "INFO: Run stage: $RUNTASK_CURRENT_STAGE"
-# TODO
-
-
-
 #
 # Get next stage for run
 #
@@ -115,30 +112,44 @@ echo "INFO: RUNTASK_NEXT_STAGE: $RUNTASK_NEXT_STAGE"
 
 
 #
+# Run RUNTASK_CURRENT_STAGE
+#
+echo "INFO: Run stage: $RUNTASK_CURRENT_STAGE"
+echo -e "\n================================================================\n\n\n"
+# TODO
+
+
+
+#
 # Run next stage if it is not "stop"
 #
 if [ "$RUNTASK_NEXT_STAGE" != "stop" ]; then
-    body="{
-      \"request\": {
-        \"branch\": \"$TRAVIS_BRANCH\",
-        \"config\": {
-          \"merge_mode\": \"deep_merge\",
-          \"env\": {
-            \"RUNTASK_USE_COMMIT\": \"$RUNTASK_USE_COMMIT\",
-            \"RUNTASK_CURRENT_STAGE\": \"$RUNTASK_NEXT_STAGE\"
+    if [ "$TRAVIS_EVENT_TYPE" == "local" ]; then
+        export RUNTASK_CURRENT_STAGE="$RUNTASK_NEXT_STAGE"
+        exec ./main.sh
+    else
+        body="{
+          \"request\": {
+            \"branch\": \"$TRAVIS_BRANCH\",
+            \"config\": {
+              \"merge_mode\": \"deep_merge\",
+              \"env\": {
+                \"RUNTASK_USE_COMMIT\": \"$RUNTASK_USE_COMMIT\",
+                \"RUNTASK_CURRENT_STAGE\": \"$RUNTASK_NEXT_STAGE\"
+              }
+            }
           }
-        }
-      }
-    }"
+        }"
 
-    curl -s -X POST \
-        -H "Content-Type: application/json" \
-        -H "Accept: application/json" \
-        -H "Travis-API-Version: 3" \
-        -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
-        -d "$body" \
-        https://api.travis-ci.com/repo/runtask%2Fruntask/requests
-    unset body
+        curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -H "Travis-API-Version: 3" \
+            -H "Authorization: token $TRAVIS_ACCESS_TOKEN" \
+            -d "$body" \
+            https://api.travis-ci.com/repo/runtask%2Fruntask/requests
+        unset body
+    fi
 fi
 
 
