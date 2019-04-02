@@ -25,11 +25,12 @@ RUN \
         exit 1; \
     fi; \
     \
-    apt-get -yq update; \
+    apt-get -yq update || true; \
     apt-get -yq install apt-utils; \
     \
     apt-get -yq install \
-        wget curl make realpath python python-pip python3 python3-pip; \
+        wget curl make realpath vim texinfo \
+        python-dev python-pip python3-dev python3-pip; \
     \
     rm -rf /var/lib/apt/lists/*; \
     rm -rf ~/.cache;

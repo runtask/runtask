@@ -16,7 +16,7 @@ RUN \
         exit 1; \
     fi; \
     \
-    apt-get -yq update; \
+    apt-get -yq update || true; \
     apt-get -yq install apt-utils; \
     apt-get -yq install curl wget ca-certificates; \
     \
@@ -30,10 +30,11 @@ RUN \
     echo "#deb-src http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main" >>/etc/apt/sources.list.d/clang.list; \
     \
     wget -O- -nv https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
-    apt-get -yq update; \
+    apt-get -yq update || true; \
     apt-get -yq install -o APT::Install-Suggests=0 -o APT::Install-Recommends=0 \
         clang-"$CLANG_VERSION" \
-        curl golang-go make python python-pip python3 python3-pip python3-venv; \
+        curl golang-go make vim texinfo \
+        python-dev python-pip python3-dev python3-pip python3-venv; \
     \
     ln -sfT /usr/bin/clang-[0-9]* /usr/bin/clang; \
     ln -sfT /usr/bin/clang++-[0-9]* /usr/bin/clang++; \
