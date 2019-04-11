@@ -33,7 +33,7 @@ RUN \
     apt-get -yq update || true; \
     apt-get -yq install -o APT::Install-Suggests=0 -o APT::Install-Recommends=0 \
         clang-"$CLANG_VERSION" \
-        curl golang-go make vim texinfo \
+        curl golang-go make vim texinfo gdb \
         python-dev python-pip python3-dev python3-pip python3-venv; \
     \
     ln -sfT /usr/bin/clang-[0-9]* /usr/bin/clang; \

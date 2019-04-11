@@ -29,7 +29,7 @@ RUN \
     apt-get -yq install apt-utils; \
     \
     apt-get -yq install \
-        wget curl make realpath vim texinfo \
+        wget curl make realpath vim texinfo gdb \
         python-dev python-pip python3-dev python3-pip; \
     \
     rm -rf /var/lib/apt/lists/*; \
