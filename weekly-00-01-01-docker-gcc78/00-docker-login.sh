@@ -1,1 +1,0 @@
-../common/docker-login.sh
