@@ -30,10 +30,19 @@ RUN \
     \
     apt-get -yq install \
         wget curl make realpath vim texinfo gdb \
-        python-dev python-pip python3-dev python3-pip; \
+        python-dev python-pip python3-dev python3-pip \
+        openjdk-7-jdk; \
     \
     rm -rf /var/lib/apt/lists/*; \
-    rm -rf ~/.cache;
+    rm -rf ~/.cache; \
+    \
+    cd /opt/more; \
+    wget https://www.apache.org/dist/ant/binaries/apache-ant-1.9.14-bin.tar.gz; \
+    tar -xf apache-ant-1.9.14-bin.tar.gz; \
+    rm apache-ant-1.9.14-bin.tar.gz; \
+    ln -sfT apache-ant-1.9.14 apache-ant
+
+ENV PATH "/opt/more/apache-ant/bin:$PATH"
 
 
 #

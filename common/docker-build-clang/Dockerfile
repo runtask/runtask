@@ -31,10 +31,11 @@ RUN \
     \
     wget -O- -nv https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
     apt-get -yq update || true; \
-    apt-get -yq install -o APT::Install-Suggests=0 -o APT::Install-Recommends=0 \
+    apt-get -yq install \
         clang-"$CLANG_VERSION" \
         curl golang-go make vim texinfo gdb \
-        python-dev python-pip python3-dev python3-pip python3-venv; \
+        python-dev python-pip python3-dev python3-pip python3-venv \
+        openjdk-7-jdk; \
     \
     ln -sfT /usr/bin/clang-[0-9]* /usr/bin/clang; \
     ln -sfT /usr/bin/clang++-[0-9]* /usr/bin/clang++; \
@@ -42,7 +43,16 @@ RUN \
     ln -sfT /usr/bin/clang++ /usr/bin/c++; \
     \
     rm -rf /var/lib/apt/lists/*; \
-    rm -rf ~/.cache;
+    rm -rf ~/.cache; \
+    \
+    cd /opt/more; \
+    wget https://www.apache.org/dist/ant/binaries/apache-ant-1.9.14-bin.tar.gz; \
+    tar -xf apache-ant-1.9.14-bin.tar.gz; \
+    rm apache-ant-1.9.14-bin.tar.gz; \
+    ln -sfT apache-ant-1.9.14 apache-ant
+
+ENV PATH "/opt/more/apache-ant/bin:$PATH"
+
 
 
 #
