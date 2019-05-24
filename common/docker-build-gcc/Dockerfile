@@ -30,8 +30,13 @@ RUN \
     \
     apt-get -yq install \
         wget curl make realpath vim texinfo gdb \
-        python-dev python-pip python3-dev python3-pip \
-        openjdk-7-jdk; \
+        python-dev python-pip python3-dev python3-pip; \
+    apt-get -yq install openjdk-8-jdk || ( \
+        echo "deb [check-valid-until=no] http://archive.debian.org/debian jessie-backports main" >>/etc/apt/sources.list; \
+        echo 'Acquire::Check-Valid-Until "false";' >>/etc/apt/apt.conf; \
+        apt-get -yq update || true; \
+        apt-get -yq install -t jessie-backports openjdk-8-jdk; \
+	); \
     \
     rm -rf /var/lib/apt/lists/*; \
     rm -rf ~/.cache; \
