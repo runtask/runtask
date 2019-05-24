@@ -48,11 +48,11 @@ body="{
   \"request\": {
     \"branch\": \"$BRANCH\",
     \"config\": {
-      \"merge_mode\": \"deep_merge\"
-    },
-    \"env\": {
-      \"RUNTASK_CURRENT_STAGE\": \"$RUNTASK_CURRENT_STAGE\",
-      \"RUNTASK_NEXT_STAGE\": \"$RUNTASK_NEXT_STAGE\"
+      \"merge_mode\": \"deep_merge\",
+      \"env\": {
+        \"RUNTASK_CURRENT_STAGE\": \"$RUNTASK_CURRENT_STAGE\",
+        \"RUNTASK_NEXT_STAGE\": \"$RUNTASK_NEXT_STAGE\"
+      }
     }
   }
 }"
